@@ -4,7 +4,7 @@ numpy
 plotly
 scikit-learn
 sentence-transformers
-google-generativeai
+google-genai
 python-dotenv
 hdbscan
 nltk
