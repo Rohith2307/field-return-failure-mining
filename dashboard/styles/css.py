@@ -676,248 +676,190 @@ div.modebar-group {
     }
 }
 
+
+
 /* =========================================================
-   PREMIUM SIDEBAR NAVIGATION
+   INSIGHTFORGE PREMIUM SIDEBAR
    ========================================================= */
 
-section[data-testid="stSidebar"] {
-    padding-top: 1rem;
+.if-sidebar-brand {
+    padding: 18px 4px 12px 4px;
+}
+
+.if-brand-title {
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+}
+
+.if-brand-subtitle {
+    margin-top: 8px;
+    font-size: 12px;
+    opacity: 0.55;
+}
+
+.if-sidebar-divider {
+    height: 1px;
+
+    margin:
+        20px 0 28px 0;
 
     background:
-        linear-gradient(
-            180deg,
-            rgba(37, 99, 235, 0.035),
-            transparent 38%
-        );
+        rgba(128, 128, 128, 0.15);
 }
 
 
-/* Navigation heading */
-
-section[data-testid="stSidebar"] h2 {
-    display: none !important;
-}
-
-
-/* Remove radio circles completely */
+/* ---------------------------------------------------------
+   Navigation Buttons
+   --------------------------------------------------------- */
 
 section[data-testid="stSidebar"]
-div[data-testid="stRadio"] input {
-    display: none !important;
-    appearance: none !important;
-    -webkit-appearance: none !important;
+.stButton {
+    margin-bottom: 12px;
 }
 
 
-/* Remove default radio spacing */
-
 section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label {
+.stButton > button {
+
     position: relative;
 
-    display: flex !important;
+    height: 64px !important;
 
-    align-items: center;
+    padding:
+        0 20px !important;
 
-    width: 100%;
+    border-radius: 18px !important;
 
-    min-height: 48px;
+    border:
+        1px solid rgba(128, 128, 128, 0.14) !important;
 
-    margin: 5px 0;
+    background:
+        rgba(128, 128, 128, 0.025) !important;
 
-    padding: 0 15px !important;
+    font-size: 16px !important;
 
-    border-radius: 12px;
+    font-weight: 650 !important;
 
-    background: transparent;
-
-    cursor: pointer;
-
-    font-size: 14px !important;
-
-    font-weight: 600;
-
-    color: var(--text-color) !important;
-
-    opacity: 0.72;
+    text-align: left !important;
 
     transition:
-        background 0.18s ease,
-        transform 0.18s ease,
-        opacity 0.18s ease,
-        box-shadow 0.18s ease;
+        transform 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease !important;
 }
 
 
-/* Hide the actual radio indicator */
+/* ---------------------------------------------------------
+   Hover
+   --------------------------------------------------------- */
 
 section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label > div:first-child {
-    display: none !important;
-}
-
-
-/* Hover */
-
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label:hover {
-    background:
-        rgba(37, 99, 235, 0.08);
-
-    opacity: 1;
+.stButton > button:hover {
 
     transform:
         translateX(4px);
-}
 
-
-/* Selected navigation item */
-
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label:has(input:checked) {
     background:
-        linear-gradient(
-            90deg,
-            rgba(37, 99, 235, 0.18),
-            rgba(99, 102, 241, 0.08)
-        );
+        rgba(37, 99, 235, 0.08) !important;
 
-    opacity: 1;
-
-    color: var(--text-color) !important;
+    border-color:
+        rgba(37, 99, 235, 0.30) !important;
 
     box-shadow:
-        inset 3px 0 0 #2563EB,
-        0 4px 14px rgba(37, 99, 235, 0.08);
+        0 8px 24px
+        rgba(37, 99, 235, 0.08) !important;
 }
 
 
-/* Selected item subtle glow */
+/* ---------------------------------------------------------
+   Primary = Active Page
+   --------------------------------------------------------- */
 
 section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label:has(input:checked)::after {
+.stButton > button[kind="primary"] {
+
+    background:
+        linear-gradient(
+            100deg,
+            rgba(37, 99, 235, 0.25),
+            rgba(99, 102, 241, 0.12)
+        ) !important;
+
+    border:
+        1px solid rgba(37, 99, 235, 0.40) !important;
+
+    box-shadow:
+        inset 4px 0 0 #2563EB,
+        0 10px 30px
+        rgba(37, 99, 235, 0.10) !important;
+}
+
+
+/* ---------------------------------------------------------
+   Active Glow
+   --------------------------------------------------------- */
+
+section[data-testid="stSidebar"]
+.stButton > button[kind="primary"]::after {
+
     content: "";
 
     position: absolute;
 
-    right: 12px;
+    right: 18px;
 
-    width: 6px;
-
-    height: 6px;
+    width: 7px;
+    height: 7px;
 
     border-radius: 50%;
 
-    background: #2563EB;
+    background: #3B82F6;
 
     box-shadow:
-        0 0 10px rgba(37, 99, 235, 0.65);
+        0 0 12px
+        rgba(59, 130, 246, 0.75);
 
-    animation: navPulse 2s infinite;
+    animation:
+        sidebarGlow 2s ease-in-out infinite;
 }
 
 
-/* =========================================================
-   NAVIGATION ICONS
-   ========================================================= */
+/* ---------------------------------------------------------
+   Button Text
+   --------------------------------------------------------- */
 
 section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label:nth-of-type(1)::before {
-    content: "⌂";
+.stButton > button p {
+
+    font-size: 16px !important;
+
+    font-weight: 650 !important;
+
+    letter-spacing: -0.15px;
 }
+
+
+/* ---------------------------------------------------------
+   Remove Streamlit Focus Outline
+   --------------------------------------------------------- */
 
 section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label:nth-of-type(2)::before {
-    content: "↑";
-}
+.stButton > button:focus {
 
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label:nth-of-type(3)::before {
-    content: "⚠";
-}
-
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label:nth-of-type(4)::before {
-    content: "↗";
-}
-
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label:nth-of-type(5)::before {
-    content: "✦";
-}
-
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label:nth-of-type(6)::before {
-    content: "▣";
+    box-shadow:
+        inset 4px 0 0 #2563EB,
+        0 10px 30px
+        rgba(37, 99, 235, 0.10) !important;
 }
 
 
-/* Icon styling */
+/* ---------------------------------------------------------
+   Animation
+   --------------------------------------------------------- */
 
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label::before {
-    display: inline-flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    width: 30px;
-
-    min-width: 30px;
-
-    height: 30px;
-
-    margin-right: 12px;
-
-    border-radius: 8px;
-
-    background:
-        rgba(128, 128, 128, 0.08);
-
-    font-size: 15px;
-
-    font-weight: 700;
-
-    opacity: 0.75;
-
-    transition:
-        background 0.18s ease,
-        transform 0.18s ease;
-}
-
-
-/* Selected icon */
-
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"]
-label:has(input:checked)::before {
-    background:
-        rgba(37, 99, 235, 0.16);
-
-    color: #60A5FA;
-
-    transform: scale(1.05);
-}
-
-
-/* Hover icon */
-
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"]
-label:hover::before {
-    background:
-        rgba(37, 99, 235, 0.12);
-
-    transform: scale(1.05);
-}
-
-
-/* =========================================================
-   NAVIGATION ANIMATION
-   ========================================================= */
-
-@keyframes navPulse {
+@keyframes sidebarGlow {
 
     0%,
     100% {
@@ -927,61 +869,8 @@ label:hover::before {
 
     50% {
         opacity: 1;
-        transform: scale(1);
+        transform: scale(1.15);
     }
-}
-
-/* =========================================================
-   FINAL SIDEBAR CLEANUP
-   ========================================================= */
-
-/* Completely hide Navigation heading */
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h2 *,
-section[data-testid="stSidebar"] .stMarkdown:has(h2) {
-    display: none !important;
-}
-
-
-/* Completely remove Streamlit radio indicators */
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label > div:first-child,
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label > div:first-child *,
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label input,
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label input::before,
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label input::after {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    width: 0 !important;
-    min-width: 0 !important;
-    max-width: 0 !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-
-/* Make sure our custom icons remain visible */
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label::before {
-    display: inline-flex !important;
-    visibility: visible !important;
-    opacity: 0.75 !important;
-}
-
-
-/* Remove any remaining radio-circle styling */
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label [role="radio"],
-section[data-testid="stSidebar"]
-div[data-testid="stRadio"] label [data-baseweb="radio"] {
-    display: none !important;
 }
 
 </style>
