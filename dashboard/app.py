@@ -12,6 +12,7 @@ from dashboard.pages.upload_page import render_upload_page
 from dashboard.pages.failure_analysis import render_failure_analysis
 from dashboard.pages.trends_page import render_trends_page
 from dashboard.pages.ai_page import render_ai_page
+from dashboard.pages.report_page import render_report_page
 
 
 def run() -> None:
@@ -49,6 +50,9 @@ def run() -> None:
 
     elif page == "AI Insights":
         render_ai_page()
+
+    elif page == "Engineering Report":
+        render_report_page()
 
     else:
         st.info(f"{page} page is under development.")

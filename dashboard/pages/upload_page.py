@@ -10,90 +10,193 @@ def render_upload_page():
 
     st.title("📂 Upload Dataset")
 
+    st.caption(
+        "Upload your field-return dataset to begin reliability analysis."
+    )
+
+    # --------------------------------------------------
+    # UPLOAD AREA
+    # --------------------------------------------------
+
     uploaded_file = st.file_uploader(
-        "Upload Field Return Dataset (.csv)",
+        "Upload Field Return Dataset",
         type=["csv"],
+        help="Upload a CSV file containing field-return records.",
     )
 
     if uploaded_file is None:
-        st.info("Please upload a CSV file to begin.")
+
+        st.info(
+            "📌 Upload a CSV file to start the analysis."
+        )
+
+        st.markdown(
+            """
+            ### What happens after upload?
+
+            **01 · Validation**  
+            The dataset is checked for missing values and structure.
+
+            **02 · Failure Analysis**  
+            Failure modes, severity and affected products are analyzed.
+
+            **03 · Trend Analytics**  
+            Failure patterns are visualized and compared.
+
+            **04 · AI Insights**  
+            Gemini identifies patterns and engineering recommendations.
+
+            **05 · Engineering Report**  
+            Generate a downloadable PDF report.
+            """
+        )
+
         return
+
+    # --------------------------------------------------
+    # READ DATASET
+    # --------------------------------------------------
 
     try:
 
         df = pd.read_csv(uploaded_file)
 
-        st.success("Dataset uploaded successfully!")
+        # Store dataset
+        st.session_state["dataset"] = df
 
-        st.subheader("Dataset Preview")
+        st.success(
+            f"✅ Dataset uploaded successfully — "
+            f"{len(df):,} records detected."
+        )
+
+        # --------------------------------------------------
+        # DATASET OVERVIEW
+        # --------------------------------------------------
+
+        st.subheader("📊 Dataset Overview")
+
+        c1, c2, c3, c4 = st.columns(4)
+
+        with c1:
+            st.metric(
+                "Records",
+                f"{len(df):,}",
+            )
+
+        with c2:
+            st.metric(
+                "Columns",
+                len(df.columns),
+            )
+
+        with c3:
+            st.metric(
+                "Missing Values",
+                int(df.isna().sum().sum()),
+            )
+
+        with c4:
+            st.metric(
+                "Duplicate Rows",
+                int(df.duplicated().sum()),
+            )
+
+        st.divider()
+
+        # --------------------------------------------------
+        # DATASET PREVIEW
+        # --------------------------------------------------
+
+        st.subheader("👀 Dataset Preview")
 
         st.dataframe(
             df.head(10),
             use_container_width=True,
             hide_index=True,
         )
+
         st.divider()
 
-        st.subheader("📊 Dataset Validation")
+        # --------------------------------------------------
+        # VALIDATION
+        # --------------------------------------------------
 
-        missing_values = int(df.isna().sum().sum())
+        st.subheader("🛡 Dataset Validation")
 
-        duplicate_rows = int(df.duplicated().sum())
-
-        quality_score = max(
-            0,
-            round(
-                (
-                    1
-                    - (
-                        (missing_values + duplicate_rows)
-                        / max(len(df), 1)
-                    )
-                )
-                * 100,
-                1,
-            ),
+        missing_values = int(
+            df.isna().sum().sum()
         )
 
-        required_columns = [
-            "Model",
-            "Issue",
-            "Severity",
-        ]
+        duplicate_rows = int(
+            df.duplicated().sum()
+        )
 
-        missing_columns = [
-            col
-            for col in required_columns
-            if col not in df.columns
-        ]
+        validation_col1, validation_col2 = st.columns(2)
 
-        c1, c2, c3 = st.columns(3)
+        with validation_col1:
 
-        with c1:
-            st.metric("Quality Score", f"{quality_score}%")
+            if missing_values == 0:
 
-        with c2:
-            st.metric("Duplicate Rows", duplicate_rows)
+                st.success(
+                    "✓ No missing values detected"
+                )
 
-        with c3:
-            st.metric("Required Columns", f"{len(required_columns) - len(missing_columns)}/{len(required_columns)}")
+            else:
 
-        if missing_columns:
-            st.warning(
-                "Missing columns: " + ", ".join(missing_columns)
+                st.warning(
+                    f"⚠ {missing_values:,} missing values detected"
+                )
+
+        with validation_col2:
+
+            if duplicate_rows == 0:
+
+                st.success(
+                    "✓ No duplicate rows detected"
+                )
+
+            else:
+
+                st.warning(
+                    f"⚠ {duplicate_rows:,} duplicate rows detected"
+                )
+
+        # --------------------------------------------------
+        # DATASET INFORMATION
+        # --------------------------------------------------
+
+        st.divider()
+
+        st.subheader("📋 Dataset Information")
+
+        info_col1, info_col2 = st.columns(2)
+
+        with info_col1:
+
+            st.markdown(
+                f"""
+                **File:** `{uploaded_file.name}`
+
+                **Rows:** `{len(df):,}`
+
+                **Columns:** `{len(df.columns)}`
+                """
             )
-        else:
-            st.success("✅ Required columns detected.")
 
-        st.subheader("Dataset Information")
+        with info_col2:
 
-        c1, c2, c3 = st.columns(3)
+            st.markdown(
+                f"""
+                **Memory Usage:** `{df.memory_usage(deep=True).sum() / 1024:.1f} KB`
 
-        c1.metric("Rows", len(df))
-        c2.metric("Columns", len(df.columns))
-        c3.metric("Missing Values", int(df.isna().sum().sum()))
+                **Numeric Columns:** `{len(df.select_dtypes(include="number").columns)}`
 
-        st.session_state["dataset"] = df
+                **Text Columns:** `{len(df.select_dtypes(include="object").columns)}`
+                """
+            )
 
     except Exception as e:
-        st.error(f"Error reading CSV: {e}")
+
+        st.error(
+            f"❌ Error reading CSV: {e}"
+        )
