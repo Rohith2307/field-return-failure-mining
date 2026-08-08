@@ -8,3 +8,4 @@ google-genai
 python-dotenv
 hdbscan
 nltk
+streamlit-aggrid
