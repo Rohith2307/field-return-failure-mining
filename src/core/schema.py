@@ -72,22 +72,39 @@ def normalize_dataset(df: pd.DataFrame) -> pd.DataFrame:
     return df.rename(columns=rename_map)
 
 
-def get_cost_impact(df: pd.DataFrame, cost_per_unit: float) -> dict:
+def get_cost_impact(
+    df: pd.DataFrame,
+    cost_per_model: dict,
+    default_cost: float = 0,
+) -> dict:
     """
-    Compute total and per-failure-mode cost impact from an
-    already-normalized dataframe.
+    Compute total, per-failure-mode, and per-model cost impact
+    from an already-normalized dataframe.
+
+    cost_per_model: dict mapping Model -> cost per failure for
+    that model. Models not present in the dict fall back to
+    default_cost.
 
     Returns a dict with:
       - total_cost: float
       - by_mode: DataFrame with columns [Failure, Count, Cost],
         sorted by Cost descending (empty DataFrame if no
         failure-mode column is present)
+      - by_model: DataFrame with columns [Model, Count, Cost],
+        sorted by Cost descending (empty DataFrame if no
+        Model column is present)
     """
 
-    if df is None or df.empty:
-        return {"total_cost": 0.0, "by_mode": pd.DataFrame()}
+    empty_result = {
+        "total_cost": 0.0,
+        "by_mode": pd.DataFrame(),
+        "by_model": pd.DataFrame(),
+    }
 
-    total_cost = len(df) * cost_per_unit
+    if df is None or df.empty:
+        return empty_result
+
+    cost_per_model = cost_per_model or {}
 
     failure_column = (
         "Failure" if "Failure" in df.columns
@@ -95,22 +112,93 @@ def get_cost_impact(df: pd.DataFrame, cost_per_unit: float) -> dict:
         else None
     )
 
-    if failure_column is None:
-        return {"total_cost": total_cost, "by_mode": pd.DataFrame()}
+    if "Model" not in df.columns:
 
-    by_mode = (
-        df[failure_column]
-        .dropna()
-        .astype(str)
-        .value_counts()
-        .reset_index()
+        # No per-row cost basis available; fall back to a flat
+        # default cost applied uniformly, same as before.
+        total_cost = len(df) * default_cost
+
+        if failure_column is None:
+            return {
+                "total_cost": total_cost,
+                "by_mode": pd.DataFrame(),
+                "by_model": pd.DataFrame(),
+            }
+
+        by_mode = (
+            df[failure_column]
+            .dropna()
+            .astype(str)
+            .value_counts()
+            .reset_index()
+        )
+
+        by_mode.columns = [failure_column, "Count"]
+        by_mode["Cost"] = by_mode["Count"] * default_cost
+        by_mode = by_mode.sort_values(
+            "Cost", ascending=False
+        ).reset_index(drop=True)
+
+        return {
+            "total_cost": total_cost,
+            "by_mode": by_mode,
+            "by_model": pd.DataFrame(),
+        }
+
+    working = df.copy()
+
+    working["_row_cost"] = (
+        working["Model"]
+        .map(cost_per_model)
+        .fillna(default_cost)
     )
 
-    by_mode.columns = [failure_column, "Count"]
-    by_mode["Cost"] = by_mode["Count"] * cost_per_unit
-    by_mode = by_mode.sort_values("Cost", ascending=False).reset_index(drop=True)
+    total_cost = working["_row_cost"].sum()
 
-    return {"total_cost": total_cost, "by_mode": by_mode}
+    # ----- by failure mode -----
+    if failure_column is not None:
+
+        by_mode = (
+            working
+            .dropna(subset=[failure_column])
+            .assign(**{
+                failure_column: (
+                    working[failure_column].astype(str)
+                )
+            })
+            .groupby(failure_column)
+            .agg(
+                Count=("_row_cost", "count"),
+                Cost=("_row_cost", "sum"),
+            )
+            .reset_index()
+            .sort_values("Cost", ascending=False)
+            .reset_index(drop=True)
+        )
+
+    else:
+        by_mode = pd.DataFrame()
+
+    # ----- by model -----
+    by_model = (
+        working
+        .dropna(subset=["Model"])
+        .assign(Model=working["Model"].astype(str))
+        .groupby("Model")
+        .agg(
+            Count=("_row_cost", "count"),
+            Cost=("_row_cost", "sum"),
+        )
+        .reset_index()
+        .sort_values("Cost", ascending=False)
+        .reset_index(drop=True)
+    )
+
+    return {
+        "total_cost": total_cost,
+        "by_mode": by_mode,
+        "by_model": by_model,
+    }
 
 
 def get_blast_radius(df: pd.DataFrame, fleet_sizes: dict) -> pd.DataFrame:

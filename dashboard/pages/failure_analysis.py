@@ -561,7 +561,8 @@ def render_failure_analysis():
 
             cost_impact = get_cost_impact(
                 df,
-                st.session_state.get("cost_per_unit", 0),
+                st.session_state.get("cost_per_model", {}),
+                st.session_state.get("default_cost_per_unit", 0),
             )
 
             by_mode = cost_impact["by_mode"]
@@ -589,6 +590,6 @@ def render_failure_analysis():
         st.caption(
             "Priority is based on relative failure concentration "
             "and helps engineering teams focus investigation effort. "
-            "Cost reflects estimated impact at the configured "
-            "per-failure rate."
+            "Cost reflects estimated impact using each product's "
+            "configured cost rate."
         )

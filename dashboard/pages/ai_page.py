@@ -67,7 +67,8 @@ def render_ai_page():
 
                 result = generate_insights(
                     df,
-                    st.session_state.get("cost_per_unit", 0),
+                    st.session_state.get("cost_per_model", {}),
+                    st.session_state.get("default_cost_per_unit", 0),
                 )
 
                 st.session_state["ai_insights"] = result

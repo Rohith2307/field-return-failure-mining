@@ -50,17 +50,65 @@ def render_sidebar() -> str:
         unsafe_allow_html=True,
     )
 
-    if "cost_per_unit" not in st.session_state:
-        st.session_state["cost_per_unit"] = 2500
+    if "default_cost_per_unit" not in st.session_state:
+        st.session_state["default_cost_per_unit"] = 2500
 
-    cost_per_unit = st.sidebar.number_input(
-        "Avg. Cost per Failure (₹)",
+    if "cost_per_model" not in st.session_state:
+        st.session_state["cost_per_model"] = {}
+
+    dataset = st.session_state.get("dataset")
+
+    models = []
+
+    if (
+        dataset is not None
+        and not dataset.empty
+        and "Model" in dataset.columns
+    ):
+        models = sorted(
+            dataset["Model"]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        )
+
+    default_cost = st.sidebar.number_input(
+        "Default Cost per Failure (₹)",
         min_value=0,
-        value=st.session_state["cost_per_unit"],
+        value=st.session_state["default_cost_per_unit"],
         step=100,
+        help=(
+            "Used for any model without its own cost set below."
+        ),
     )
 
-    st.session_state["cost_per_unit"] = cost_per_unit
+    st.session_state["default_cost_per_unit"] = default_cost
+
+    if models:
+
+        with st.sidebar.expander(
+            f"Cost per Model ({len(models)})",
+            expanded=False,
+        ):
+
+            for model in models:
+
+                current_value = st.session_state[
+                    "cost_per_model"
+                ].get(model, default_cost)
+
+                model_cost = st.number_input(
+                    model,
+                    min_value=0,
+                    value=int(current_value),
+                    step=100,
+                    key=f"cost_model_{model}",
+                )
+
+                st.session_state["cost_per_model"][model] = (
+                    model_cost
+                )
 
     if "light_mode" not in st.session_state:
         st.session_state["light_mode"] = False

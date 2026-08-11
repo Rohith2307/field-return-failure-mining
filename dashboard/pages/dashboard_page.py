@@ -205,6 +205,13 @@ def get_dashboard_data():
             na_position="last",
         )
 
+    if "Date" in repair_logs.columns:
+
+        repair_logs["Date"] = pd.to_datetime(
+            repair_logs["Date"],
+            errors="coerce",
+        )
+
     return (
         months,
         failures,
@@ -1334,11 +1341,47 @@ def render_dashboard() -> None:
 
         critical_failures = 0
 
-    # MTTR cannot be calculated from the current dataset
-    # because it contains Repair Date but not Failure Date
-    # or Repair Duration.
+    has_date = "Date" in logs.columns
+    has_repair_date = "Repair Date" in logs.columns
 
-    mttr = "N/A"
+    if not has_date and not has_repair_date:
+
+        mttr = "N/A"
+        mttr_note = "Missing Date & Repair Date"
+
+    elif not has_date:
+
+        mttr = "N/A"
+        mttr_note = "Missing failure Date column"
+
+    elif not has_repair_date:
+
+        mttr = "N/A"
+        mttr_note = "Missing Repair Date column"
+
+    else:
+
+        resolution_days = (
+            logs["Repair Date"] - logs["Date"]
+        ).dt.days
+
+        valid_days = resolution_days.dropna()
+        valid_days = valid_days[valid_days >= 0]
+
+        if valid_days.empty:
+
+            mttr = "N/A"
+
+            mttr_note = (
+                "Dates present but unusable"
+                if not resolution_days.dropna().empty
+                else "No valid date pairs found"
+            )
+
+        else:
+
+            mttr = f"{valid_days.mean():.1f}d"
+            mttr_note = f"Across {len(valid_days)} repaired records"
 
     # --------------------------------------------------------
     # SYSTEM HEALTH STATUS
@@ -1355,7 +1398,8 @@ def render_dashboard() -> None:
 
     cost_impact = get_cost_impact(
         logs,
-        st.session_state.get("cost_per_unit", 0),
+        st.session_state.get("cost_per_model", {}),
+        st.session_state.get("default_cost_per_unit", 0),
     )
 
     health_state_class = (
@@ -1449,7 +1493,7 @@ def render_dashboard() -> None:
                 </div>
 
                 <div class="if-kpi-change purple">
-                    Requires Failure Date
+                    {mttr_note}
                 </div>
 
             </div>
@@ -1466,7 +1510,7 @@ def render_dashboard() -> None:
                 </div>
 
                 <div class="if-kpi-change orange">
-                    At ₹{st.session_state.get("cost_per_unit", 0):,} / failure
+                    Based on per-model cost rates
                 </div>
 
             </div>

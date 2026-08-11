@@ -237,13 +237,35 @@ def load_css() -> str:
         border-radius: 18px;
 
         border:
-            1px solid rgba(128, 128, 128, 0.14);
+            1px solid rgba(128, 128, 128, 0.16);
 
         background:
-            rgba(128, 128, 128, 0.025);
+            linear-gradient(
+                165deg,
+                rgba(59, 130, 246, 0.06),
+                rgba(128, 128, 128, 0.02) 55%
+            );
 
         box-shadow:
-            0 8px 30px rgba(0, 0, 0, 0.04);
+            0 1px 0 rgba(255, 255, 255, 0.04) inset,
+            0 10px 30px rgba(0, 0, 0, 0.05),
+            0 2px 8px rgba(0, 0, 0, 0.03);
+
+        transition:
+            transform 0.25s ease,
+            box-shadow 0.25s ease,
+            border-color 0.25s ease;
+    }
+
+    .if-card:hover {
+        transform: translateY(-3px);
+
+        border-color: rgba(59, 130, 246, 0.28);
+
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.05) inset,
+            0 18px 40px rgba(0, 0, 0, 0.08),
+            0 4px 14px rgba(37, 99, 235, 0.08);
     }
 
     /* ---------------------------------------------------------
@@ -256,10 +278,34 @@ def load_css() -> str:
         border-radius: 18px;
 
         border:
-            1px solid rgba(128, 128, 128, 0.14);
+            1px solid rgba(128, 128, 128, 0.16);
 
         background:
-            rgba(128, 128, 128, 0.025);
+            linear-gradient(
+                165deg,
+                rgba(245, 158, 11, 0.05),
+                rgba(128, 128, 128, 0.02) 60%
+            );
+
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.04) inset,
+            0 8px 24px rgba(0, 0, 0, 0.05);
+
+        transition:
+            transform 0.25s ease,
+            box-shadow 0.25s ease,
+            border-color 0.25s ease;
+    }
+
+    .if-metric-card:hover {
+        transform: translateY(-3px);
+
+        border-color: rgba(245, 158, 11, 0.30);
+
+        box-shadow:
+            0 1px 0 rgba(255, 255, 255, 0.05) inset,
+            0 16px 34px rgba(0, 0, 0, 0.08),
+            0 4px 12px rgba(245, 158, 11, 0.08);
     }
 
     .if-metric-label {
@@ -267,12 +313,32 @@ def load_css() -> str:
         font-weight: 600;
         opacity: 0.55;
         margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
     }
 
     .if-metric-value {
         font-size: 28px;
         font-weight: 800;
         letter-spacing: -0.8px;
+
+        background:
+            linear-gradient(
+                135deg,
+                currentColor,
+                currentColor 60%,
+                rgba(245, 158, 11, 0.9)
+            );
+
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+
+        transition: letter-spacing 0.25s ease;
+    }s
+
+    .if-metric-card:hover .if-metric-value {
+        letter-spacing: -0.6px;
     }
 
     /* ---------------------------------------------------------

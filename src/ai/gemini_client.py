@@ -14,7 +14,11 @@ else:
     client = None
 
 
-def build_dataset_summary(df: pd.DataFrame, cost_per_unit: float = 0) -> str:
+def build_dataset_summary(
+    df: pd.DataFrame,
+    cost_per_model: dict = None,
+    default_cost_per_unit: float = 0,
+) -> str:
     """Create a compact analytical summary for Gemini."""
 
     summary = []
@@ -69,21 +73,39 @@ def build_dataset_summary(df: pd.DataFrame, cost_per_unit: float = 0) -> str:
             summary.append(f"{model}: {count}")
 
     # Cost impact
-    if cost_per_unit:
-        total_cost = len(df) * cost_per_unit
+    cost_per_model = cost_per_model or {}
+
+    if cost_per_model or default_cost_per_unit:
+
+        if "Model" in df.columns:
+            row_costs = (
+                df["Model"]
+                .astype(str)
+                .map(lambda m: cost_per_model.get(m, default_cost_per_unit))
+            )
+            total_cost = row_costs.sum()
+        else:
+            total_cost = len(df) * default_cost_per_unit
 
         summary.append("\nESTIMATED COST IMPACT")
         summary.append(
             f"Total estimated cost: ₹{total_cost:,.0f} "
-            f"(at ₹{cost_per_unit:,.0f} per failure, {len(df)} records)"
+            f"({len(df)} records, per-model cost rates where set, "
+            f"₹{default_cost_per_unit:,.0f} default otherwise)"
         )
 
-        if failure_column:
+        if "Model" in df.columns and cost_per_model:
+            summary.append("Cost rate by product model:")
+            for model, rate in cost_per_model.items():
+                summary.append(f"{model}: ₹{rate:,.0f} per failure")
+
+        if failure_column and "Model" in df.columns:
             mode_costs = (
-                df[failure_column]
-                .value_counts()
+                df.assign(_cost=row_costs)
+                .groupby(failure_column)["_cost"]
+                .sum()
+                .sort_values(ascending=False)
                 .head(5)
-                .mul(cost_per_unit)
             )
 
             summary.append("Cost by top failure mode:")
@@ -139,7 +161,11 @@ def build_dataset_summary(df: pd.DataFrame, cost_per_unit: float = 0) -> str:
     return "\n".join(summary)
 
 
-def generate_insights(df: pd.DataFrame, cost_per_unit: float = 0) -> str:
+def generate_insights(
+    df: pd.DataFrame,
+    cost_per_model: dict = None,
+    default_cost_per_unit: float = 0,
+) -> str:
     """Generate engineering insights using Gemini."""
 
     if client is None:
@@ -148,7 +174,9 @@ def generate_insights(df: pd.DataFrame, cost_per_unit: float = 0) -> str:
             "Please add GEMINI_API_KEY to your .env file."
         )
 
-    dataset_summary = build_dataset_summary(df, cost_per_unit)
+    dataset_summary = build_dataset_summary(
+        df, cost_per_model, default_cost_per_unit
+    )
 
     prompt = f"""
 You are a Senior Reliability Engineer analyzing

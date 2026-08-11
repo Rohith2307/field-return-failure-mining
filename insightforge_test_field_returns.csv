@@ -1,13 +1,26 @@
-ID,Month,Failures,Failure,Severity,Model,Issue,Repair Date,Status
-1001,Jan,105,Overheating,High,Latitude,Overheating,2026-01-08,Repaired
-1002,Jan,112,Battery,Medium,Inspiron,Battery Drain,2026-01-12,Repaired
-1003,Feb,118,Display,Low,XPS,Display Flicker,2026-02-05,Pending
-1004,Feb,126,Charging,High,Precision,Charging Failure,2026-02-18,Repaired
-1005,Mar,143,Keyboard,Medium,Latitude,Keyboard Fault,2026-03-03,Repaired
-1006,Mar,151,Battery,High,XPS,Thermal Shutdown,2026-03-19,Open
-1007,Apr,166,Overheating,High,Latitude,Overheating,2026-04-07,Repaired
-1008,Apr,174,Display,Low,Inspiron,Display Flicker,2026-04-22,Pending
-1009,May,195,Charging,High,Precision,Charging Failure,2026-05-06,Repaired
-1010,May,202,Keyboard,Medium,Latitude,Keyboard Fault,2026-05-20,Repaired
-1011,Jun,214,Battery,High,XPS,Battery Drain,2026-06-04,Pending
-1012,Jun,221,Overheating,High,Latitude,Thermal Shutdown,2026-06-18,Open
+ID,Month,Date,Failures,Failure,Severity,Model,Repair Date,Status
+FR-1001,Jan,2026-01-04,1,Overheating,High,Model-A200,2026-01-09,Repaired
+FR-1002,Jan,2026-01-07,1,Battery Drain,Medium,Model-B150,2026-01-15,Repaired
+FR-1003,Jan,2026-01-11,1,Screen Flicker,Low,Model-A200,2026-01-14,Repaired
+FR-1004,Jan,2026-01-15,1,Overheating,High,Model-C300,2026-01-22,Repaired
+FR-1005,Jan,2026-01-19,1,Connector Failure,Medium,Model-B150,2026-01-25,Pending
+FR-1006,Feb,2026-02-02,1,Battery Drain,Medium,Model-A200,2026-02-10,Repaired
+FR-1007,Feb,2026-02-05,1,Overheating,High,Model-C300,2026-02-09,Repaired
+FR-1008,Feb,2026-02-08,1,Firmware Crash,Low,Model-B150,2026-02-12,Repaired
+FR-1009,Feb,2026-02-12,1,Screen Flicker,Low,Model-A200,2026-02-20,Repaired
+FR-1010,Feb,2026-02-18,1,Overheating,High,Model-C300,2026-02-27,Open
+FR-1011,Mar,2026-03-01,1,Connector Failure,Medium,Model-B150,2026-03-06,Repaired
+FR-1012,Mar,2026-03-04,1,Battery Drain,Medium,Model-A200,2026-03-08,Repaired
+FR-1013,Mar,2026-03-09,1,Overheating,High,Model-C300,2026-03-19,Repaired
+FR-1014,Mar,2026-03-13,1,Firmware Crash,Low,Model-B150,2026-03-16,Repaired
+FR-1015,Mar,2026-03-17,1,Screen Flicker,Low,Model-A200,2026-03-21,Pending
+FR-1016,Apr,2026-04-02,1,Overheating,High,Model-C300,2026-04-11,Repaired
+FR-1017,Apr,2026-04-06,1,Connector Failure,Medium,Model-B150,2026-04-10,Repaired
+FR-1018,Apr,2026-04-10,1,Battery Drain,Medium,Model-A200,2026-04-17,Repaired
+FR-1019,Apr,2026-04-14,1,Overheating,High,Model-C300,2026-04-24,Open
+FR-1020,Apr,2026-04-19,1,Firmware Crash,Low,Model-B150,2026-04-23,Repaired
+FR-1021,May,2026-05-03,1,Screen Flicker,Low,Model-A200,2026-05-07,Repaired
+FR-1022,May,2026-05-07,1,Overheating,High,Model-C300,2026-05-16,Repaired
+FR-1023,May,2026-05-12,1,Connector Failure,Medium,Model-B150,2026-05-18,Repaired
+FR-1024,May,2026-05-16,1,Battery Drain,Medium,Model-A200,2026-05-24,Pending
+FR-1025,May,2026-05-21,1,Overheating,High,Model-C300,2026-05-30,Repaired
