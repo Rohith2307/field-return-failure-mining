@@ -31,10 +31,16 @@ def render_ai_page():
         f"{len(df):,}",
     )
 
+    failure_column = (
+        "Failure" if "Failure" in df.columns
+        else "Issue" if "Issue" in df.columns
+        else None
+    )
+
     c2.metric(
         "Failure Modes",
-        df["Issue"].nunique()
-        if "Issue" in df.columns
+        df[failure_column].nunique()
+        if failure_column
         else "N/A",
     )
 
@@ -59,7 +65,10 @@ def render_ai_page():
 
             try:
 
-                result = generate_insights(df)
+                result = generate_insights(
+                    df,
+                    st.session_state.get("cost_per_unit", 0),
+                )
 
                 st.session_state["ai_insights"] = result
 

@@ -5,6 +5,9 @@ Failure Analysis Page
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+
+from src.core.schema import get_cost_impact
 
 
 def render_failure_analysis():
@@ -28,6 +31,12 @@ def render_failure_analysis():
 
     st.sidebar.markdown("## Analysis Filters")
 
+    failure_column = (
+        "Failure" if "Failure" in df.columns
+        else "Issue" if "Issue" in df.columns
+        else None
+    )
+
     if "Severity" in df.columns:
 
         severity_options = [
@@ -47,6 +56,46 @@ def render_failure_analysis():
                 df["Severity"] == selected_severity
             ]
 
+    if "Model" in df.columns:
+
+        model_options = sorted(
+            df["Model"]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        )
+
+        selected_models = st.sidebar.multiselect(
+            "Product Model",
+            model_options,
+            default=model_options,
+        )
+
+        df = df[
+            df["Model"].astype(str).isin(selected_models)
+        ]
+
+    if failure_column:
+
+        failure_options = sorted(
+            df[failure_column]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        )
+
+        selected_failures = st.sidebar.multiselect(
+            "Failure Mode",
+            failure_options,
+            default=failure_options,
+        )
+
+        df = df[
+            df[failure_column].astype(str).isin(selected_failures)
+        ]
+
     if df.empty:
         st.warning("No records match the selected filters.")
         return
@@ -64,9 +113,15 @@ def render_failure_analysis():
             (df["Severity"] == "High").sum()
         )
 
+    failure_column = (
+        "Failure" if "Failure" in df.columns
+        else "Issue" if "Issue" in df.columns
+        else None
+    )
+
     failure_modes = (
-        df["Issue"].nunique()
-        if "Issue" in df.columns
+        df[failure_column].nunique()
+        if failure_column
         else 0
     )
 
@@ -122,24 +177,24 @@ def render_failure_analysis():
 
     with col1:
 
-        if "Issue" in df.columns:
+        if failure_column:
 
             issue_df = (
-                df["Issue"]
+                df[failure_column]
                 .value_counts()
                 .head(10)
                 .reset_index()
             )
 
             issue_df.columns = [
-                "Issue",
+                failure_column,
                 "Count",
             ]
 
             fig = px.bar(
                 issue_df,
                 x="Count",
-                y="Issue",
+                y=failure_column,
                 orientation="h",
             )
 
@@ -290,6 +345,174 @@ def render_failure_analysis():
         )
 
     # ==================================================
+    # PARETO ANALYSIS
+    # ==================================================
+
+    if failure_column:
+
+        st.markdown("<div class='spacer'></div>", unsafe_allow_html=True)
+
+        st.markdown(
+            '<div class="section-label">PARETO ANALYSIS</div>',
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("#### Failure Mode Concentration")
+
+        pareto_df = (
+            df[failure_column]
+            .dropna()
+            .astype(str)
+            .value_counts()
+            .reset_index()
+        )
+
+        pareto_df.columns = [failure_column, "Count"]
+
+        pareto_df = pareto_df.sort_values(
+            "Count",
+            ascending=False,
+        ).reset_index(drop=True)
+
+        pareto_df["Cumulative %"] = (
+            pareto_df["Count"].cumsum()
+            / pareto_df["Count"].sum()
+            * 100
+        )
+
+        pareto_fig = go.Figure()
+
+        pareto_fig.add_trace(
+            go.Bar(
+                x=pareto_df[failure_column],
+                y=pareto_df["Count"],
+                name="Failures",
+                marker=dict(color="#4c8dff"),
+                yaxis="y1",
+                hovertemplate=(
+                    "<b>%{x}</b><br>"
+                    "Failures: %{y}"
+                    "<extra></extra>"
+                ),
+            )
+        )
+
+        pareto_fig.add_trace(
+            go.Scatter(
+                x=pareto_df[failure_column],
+                y=pareto_df["Cumulative %"],
+                name="Cumulative %",
+                mode="lines+markers",
+                line=dict(color="#ffb52e", width=3),
+                marker=dict(size=7),
+                yaxis="y2",
+                hovertemplate=(
+                    "<b>%{x}</b><br>"
+                    "Cumulative: %{y:.1f}%"
+                    "<extra></extra>"
+                ),
+            )
+        )
+
+        pareto_fig.add_hline(
+            y=80,
+            line_dash="dot",
+            line_color="#ff5b62",
+            annotation_text="80%",
+            annotation_position="right",
+            yref="y2",
+        )
+
+        pareto_fig.update_layout(
+            height=400,
+            margin=dict(l=10, r=40, t=20, b=10),
+            xaxis=dict(title=None),
+            yaxis=dict(
+                title="Failures",
+                side="left",
+            ),
+            yaxis2=dict(
+                title="Cumulative %",
+                overlaying="y",
+                side="right",
+                range=[0, 105],
+                showgrid=False,
+            ),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
+                x=0.5,
+            ),
+        )
+
+        st.plotly_chart(
+            pareto_fig,
+            use_container_width=True,
+        )
+
+        vital_few = (
+            pareto_df[pareto_df["Cumulative %"] <= 80]
+            .shape[0]
+        )
+
+        vital_few = max(vital_few, 1)
+
+        st.caption(
+            f"The top {vital_few} failure mode"
+            f"{'s' if vital_few != 1 else ''} account for "
+            "roughly 80% of all recorded failures — "
+            "prioritize these for root-cause investigation."
+        )
+
+    # ==================================================
+    # DRILL-DOWN
+    # ==================================================
+
+    if failure_column:
+
+        st.markdown("<div class='spacer'></div>", unsafe_allow_html=True)
+
+        st.markdown(
+            '<div class="section-label">DRILL-DOWN</div>',
+            unsafe_allow_html=True,
+        )
+
+        st.markdown("#### Inspect a Failure Mode")
+
+        drilldown_options = ["Select a failure mode..."] + sorted(
+            df[failure_column]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        )
+
+        selected_mode = st.selectbox(
+            "Failure Mode",
+            drilldown_options,
+            label_visibility="collapsed",
+        )
+
+        if selected_mode != "Select a failure mode...":
+
+            drill_df = df[
+                df[failure_column].astype(str) == selected_mode
+            ]
+
+            st.caption(
+                f"{len(drill_df)} record(s) with failure mode "
+                f"'{selected_mode}'."
+            )
+
+            st.dataframe(
+                drill_df,
+                use_container_width=True,
+                hide_index=True,
+            )
+
+    # ==================================================
     # ENGINEERING PRIORITY
     # ==================================================
 
@@ -302,10 +525,10 @@ def render_failure_analysis():
 
     st.subheader("🎯 Failure Modes Requiring Attention")
 
-    if "Issue" in df.columns:
+    if failure_column:
 
         priority_df = (
-            df.groupby("Issue")
+            df.groupby(failure_column)
             .size()
             .reset_index(name="Failures")
             .sort_values(
@@ -336,6 +559,27 @@ def render_failure_analysis():
                 "Priority"
             ] = "Medium"
 
+            cost_impact = get_cost_impact(
+                df,
+                st.session_state.get("cost_per_unit", 0),
+            )
+
+            by_mode = cost_impact["by_mode"]
+
+            if not by_mode.empty:
+
+                priority_df = priority_df.merge(
+                    by_mode[[failure_column, "Cost"]],
+                    on=failure_column,
+                    how="left",
+                )
+
+                priority_df["Cost"] = (
+                    priority_df["Cost"]
+                    .fillna(0)
+                    .map(lambda x: f"₹{x:,.0f}")
+                )
+
         st.dataframe(
             priority_df.head(10),
             use_container_width=True,
@@ -344,5 +588,7 @@ def render_failure_analysis():
 
         st.caption(
             "Priority is based on relative failure concentration "
-            "and helps engineering teams focus investigation effort."
+            "and helps engineering teams focus investigation effort. "
+            "Cost reflects estimated impact at the configured "
+            "per-failure rate."
         )

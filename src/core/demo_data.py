@@ -2,126 +2,187 @@ import pandas as pd
 import streamlit as st
 
 
-def get_dataset():
+def get_dataset() -> pd.DataFrame:
+    """
+    Return the currently loaded dataset.
+
+    If the user has uploaded a dataset, use that.
+    Otherwise return the demo dataset.
+    """
 
     if "dataset" in st.session_state:
-        return st.session_state["dataset"]
+        dataset = st.session_state["dataset"]
 
-    return pd.DataFrame({
-        "Month": ["Jan","Feb","Mar","Apr","May","Jun"],
-        "Failures": [105,118,143,166,195,214],
-        "Failure": [
-            "Overheating",
-            "Battery",
-            "Display",
-            "Charging",
-            "Keyboard",
-            "Battery",
-        ],
-        "Severity": [
-            "High",
-            "Medium",
-            "Low",
-            "High",
-            "Medium",
-            "High",
-        ],
-        "Model": [
-            "Latitude",
-            "Inspiron",
-            "XPS",
-            "Precision",
-            "Latitude",
-            "XPS",
-        ],
-        "Issue": [
-            "Overheating",
-            "Battery Drain",
-            "Display Flicker",
-            "Charging Failure",
-            "Keyboard Fault",
-            "Thermal Shutdown",
-        ],
-    })
+        if isinstance(dataset, pd.DataFrame):
+            return dataset.copy()
+
+    return pd.DataFrame(
+        {
+            "Month": [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "Jun",
+            ],
+            "Failures": [
+                105,
+                118,
+                143,
+                166,
+                195,
+                214,
+            ],
+            "Failure": [
+                "Overheating",
+                "Battery",
+                "Display",
+                "Charging",
+                "Keyboard",
+                "Battery",
+            ],
+            "Severity": [
+                "High",
+                "Medium",
+                "Low",
+                "High",
+                "Medium",
+                "High",
+            ],
+            "Model": [
+                "Latitude",
+                "Inspiron",
+                "XPS",
+                "Precision",
+                "Latitude",
+                "XPS",
+            ],
+            "Issue": [
+                "Overheating",
+                "Battery Drain",
+                "Display Flicker",
+                "Charging Failure",
+                "Keyboard Fault",
+                "Thermal Shutdown",
+            ],
+        }
+    )
 
 
-def repair_logs():
+def repair_logs() -> pd.DataFrame:
+    """
+    Return repair records for the dashboard.
+    """
     return get_dataset()
 
 
-def trend_data():
+def trend_data() -> pd.DataFrame:
+    """
+    Generate monthly failure trend data.
+    """
 
     df = get_dataset()
 
-    if "Month" in df.columns and "Failures" in df.columns:
+    if "Month" not in df.columns:
+        return pd.DataFrame(
+            {
+                "Month": [
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                ],
+                "Failures": [
+                    105,
+                    118,
+                    143,
+                    166,
+                    195,
+                    214,
+                ],
+            }
+        )
 
-        month_order = [
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-        ]
+    month_order = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    ]
+
+    if "Failures" in df.columns:
 
         trend = (
             df.groupby("Month", as_index=False)["Failures"]
             .sum()
         )
 
-        trend["Month"] = pd.Categorical(
-            trend["Month"],
-            categories=month_order,
-            ordered=True,
-        )
+    else:
 
-        trend = trend.sort_values("Month")
-
-        return trend
-
-    return pd.DataFrame({
-        "Month": ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-        "Failures": [105, 118, 143, 166, 195, 214],
-    })
-
-
-def distribution_data():
-
-    df = get_dataset()
-
-    if "Failure" in df.columns:
-        return (
-            df.groupby("Failure")
+        trend = (
+            df.groupby("Month")
             .size()
-            .reset_index(name="Count")
+            .reset_index(name="Failures")
         )
 
-    return pd.DataFrame({
-        "Failure":[
-            "Overheating",
-            "Battery",
-            "Display",
-            "Charging",
-            "Keyboard"
-        ],
-        "Count":[41,25,17,10,7],
-    })
+    trend["Month"] = pd.Categorical(
+        trend["Month"],
+        categories=month_order,
+        ordered=True,
+    )
 
-def calculate_health_score():
+    return trend.sort_values("Month").reset_index(drop=True)
+
+
+def distribution_data() -> pd.DataFrame:
+    """
+    Generate failure distribution data.
+    """
 
     df = get_dataset()
 
-    if len(df) == 0:
-        return 0
+    for column in [
+        "Failure",
+        "Failure Mode",
+        "Category",
+        "Type",
+    ]:
 
-    score = 100
+        if column in df.columns:
 
-    if "Severity" in df.columns:
+            return (
+                df.groupby(column)
+                .size()
+                .reset_index(name="Count")
+                .rename(columns={column: "Failure"})
+            )
 
-        high = (df["Severity"] == "High").sum()
-        medium = (df["Severity"] == "Medium").sum()
-        low = (df["Severity"] == "Low").sum()
-
-        score -= high * 2.5
-        score -= medium * 1
-        score -= low * 0.25
-
-    score = max(0, min(100, round(score)))
-
-    return score
+    return pd.DataFrame(
+        {
+            "Failure": [
+                "Overheating",
+                "Battery",
+                "Display",
+                "Charging",
+                "Keyboard",
+            ],
+            "Count": [
+                41,
+                25,
+                17,
+                10,
+                7,
+            ],
+        }
+    )

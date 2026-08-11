@@ -1,0 +1,13 @@
+ID,Month,Failures,Failure,Severity,Model,Issue,Repair Date,Status
+1001,Jan,105,Overheating,High,Latitude,Overheating,2026-01-08,Repaired
+1002,Jan,112,Battery,Medium,Inspiron,Battery Drain,2026-01-12,Repaired
+1003,Feb,118,Display,Low,XPS,Display Flicker,2026-02-05,Pending
+1004,Feb,126,Charging,High,Precision,Charging Failure,2026-02-18,Repaired
+1005,Mar,143,Keyboard,Medium,Latitude,Keyboard Fault,2026-03-03,Repaired
+1006,Mar,151,Battery,High,XPS,Thermal Shutdown,2026-03-19,Open
+1007,Apr,166,Overheating,High,Latitude,Overheating,2026-04-07,Repaired
+1008,Apr,174,Display,Low,Inspiron,Display Flicker,2026-04-22,Pending
+1009,May,195,Charging,High,Precision,Charging Failure,2026-05-06,Repaired
+1010,May,202,Keyboard,Medium,Latitude,Keyboard Fault,2026-05-20,Repaired
+1011,Jun,214,Battery,High,XPS,Battery Drain,2026-06-04,Pending
+1012,Jun,221,Overheating,High,Latitude,Thermal Shutdown,2026-06-18,Open

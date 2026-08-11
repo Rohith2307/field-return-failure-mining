@@ -14,7 +14,7 @@ else:
     client = None
 
 
-def build_dataset_summary(df: pd.DataFrame) -> str:
+def build_dataset_summary(df: pd.DataFrame, cost_per_unit: float = 0) -> str:
     """Create a compact analytical summary for Gemini."""
 
     summary = []
@@ -47,8 +47,14 @@ def build_dataset_summary(df: pd.DataFrame) -> str:
             )
 
     # Failure modes
-    if "Issue" in df.columns:
-        issue_counts = df["Issue"].value_counts().head(10)
+    failure_column = (
+        "Failure" if "Failure" in df.columns
+        else "Issue" if "Issue" in df.columns
+        else None
+    )
+
+    if failure_column:
+        issue_counts = df[failure_column].value_counts().head(10)
 
         summary.append("\nTOP FAILURE MODES")
         for issue, count in issue_counts.items():
@@ -61,6 +67,28 @@ def build_dataset_summary(df: pd.DataFrame) -> str:
         summary.append("\nTOP AFFECTED PRODUCTS")
         for model, count in model_counts.items():
             summary.append(f"{model}: {count}")
+
+    # Cost impact
+    if cost_per_unit:
+        total_cost = len(df) * cost_per_unit
+
+        summary.append("\nESTIMATED COST IMPACT")
+        summary.append(
+            f"Total estimated cost: ₹{total_cost:,.0f} "
+            f"(at ₹{cost_per_unit:,.0f} per failure, {len(df)} records)"
+        )
+
+        if failure_column:
+            mode_costs = (
+                df[failure_column]
+                .value_counts()
+                .head(5)
+                .mul(cost_per_unit)
+            )
+
+            summary.append("Cost by top failure mode:")
+            for mode, cost in mode_costs.items():
+                summary.append(f"{mode}: ₹{cost:,.0f}")
 
     # Monthly trend
     if "Date" in df.columns:
@@ -86,10 +114,32 @@ def build_dataset_summary(df: pd.DataFrame) -> str:
                     f"{month}: {count}"
                 )
 
+    elif "Month" in df.columns:
+        month_order = [
+            "Jan", "Feb", "Mar", "Apr",
+            "May", "Jun", "Jul", "Aug",
+            "Sep", "Oct", "Nov", "Dec",
+        ]
+
+        monthly = (
+            df.groupby("Month", sort=False)["Failures"].sum()
+            if "Failures" in df.columns
+            else df.groupby("Month", sort=False).size()
+        )
+
+        monthly = monthly.reindex(
+            [m for m in month_order if m in monthly.index]
+        )
+
+        summary.append("\nMONTHLY FAILURE TREND")
+
+        for month, count in monthly.items():
+            summary.append(f"{month}: {count}")
+
     return "\n".join(summary)
 
 
-def generate_insights(df: pd.DataFrame) -> str:
+def generate_insights(df: pd.DataFrame, cost_per_unit: float = 0) -> str:
     """Generate engineering insights using Gemini."""
 
     if client is None:
@@ -98,7 +148,7 @@ def generate_insights(df: pd.DataFrame) -> str:
             "Please add GEMINI_API_KEY to your .env file."
         )
 
-    dataset_summary = build_dataset_summary(df)
+    dataset_summary = build_dataset_summary(df, cost_per_unit)
 
     prompt = f"""
 You are a Senior Reliability Engineer analyzing
@@ -123,7 +173,9 @@ Suggest likely engineering causes based on the observed patterns.
 Clearly label these as hypotheses rather than confirmed causes.
 
 ## Engineering Recommendations
-Give practical actions engineers should take.
+Give practical actions engineers should take. If cost impact
+data is provided above, reference estimated ₹ savings or
+exposure where relevant.
 
 ## Preventive Actions
 Suggest concrete actions to reduce future field failures.

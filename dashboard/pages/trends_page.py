@@ -6,7 +6,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from src.core.demo_data import trend_data
+
 
 
 def render_trends_page():
@@ -21,8 +21,23 @@ def render_trends_page():
         st.warning("Please upload a dataset first.")
         return
 
-    # Use the same monthly trend data as the Dashboard
-    monthly = trend_data().copy()
+    df = st.session_state["dataset"].copy()
+
+    if "Month" not in df.columns:
+        st.warning("No trend data available.")
+        return
+
+    if "Failures" in df.columns:
+        monthly = (
+            df.groupby("Month", as_index=False)["Failures"]
+            .sum()
+        )
+    else:
+        monthly = (
+            df.groupby("Month")
+            .size()
+            .reset_index(name="Failures")
+        )
 
     if monthly.empty:
         st.warning("No trend data available.")
@@ -140,6 +155,69 @@ def render_trends_page():
     )
 
     # --------------------------------------------------
+    # PRODUCT / MODEL TREND
+    # --------------------------------------------------
+
+    if "Model" in df.columns:
+
+        st.divider()
+
+        st.subheader("🧩 Failure Trend by Product Model")
+
+        if "Failures" in df.columns:
+            model_monthly = (
+                df.groupby(["Month", "Model"], as_index=False)["Failures"]
+                .sum()
+            )
+        else:
+            model_monthly = (
+                df.groupby(["Month", "Model"])
+                .size()
+                .reset_index(name="Failures")
+            )
+
+        model_monthly["Month"] = pd.Categorical(
+            model_monthly["Month"],
+            categories=month_order,
+            ordered=True,
+        )
+
+        model_monthly = model_monthly.sort_values("Month")
+
+        model_fig = px.line(
+            model_monthly,
+            x="Month",
+            y="Failures",
+            color="Model",
+            markers=True,
+        )
+
+        model_fig.update_layout(
+            height=420,
+            margin=dict(l=10, r=10, t=20, b=10),
+            xaxis_title=None,
+            yaxis_title="Number of Failures",
+            hovermode="x unified",
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
+                x=0.5,
+            ),
+        )
+
+        model_fig.update_traces(
+            line=dict(width=2.5),
+            marker=dict(size=6),
+        )
+
+        st.plotly_chart(
+            model_fig,
+            use_container_width=True,
+        )
+
+    # --------------------------------------------------
     # TREND INTERPRETATION
     # --------------------------------------------------
 
@@ -172,6 +250,106 @@ def render_trends_page():
         f"Peak failure activity occurred in **{peak_month}** "
         f"with **{peak_failures} failures**."
     )
+
+    # --------------------------------------------------
+    # SEVERITY TREND
+    # --------------------------------------------------
+
+    if "Severity" in df.columns:
+
+        st.divider()
+
+        st.subheader("🚦 Severity Trend Over Time")
+
+        severity_monthly = (
+            df.groupby(["Month", "Severity"])
+            .size()
+            .reset_index(name="Failures")
+        )
+
+        severity_monthly["Month"] = pd.Categorical(
+            severity_monthly["Month"],
+            categories=month_order,
+            ordered=True,
+        )
+
+        severity_monthly = severity_monthly.sort_values("Month")
+
+        severity_colors = {
+            "High": "#ff5b62",
+            "Medium": "#ffb52e",
+            "Low": "#3ecf8e",
+        }
+
+        severity_fig = px.area(
+            severity_monthly,
+            x="Month",
+            y="Failures",
+            color="Severity",
+            color_discrete_map=severity_colors,
+            category_orders={
+                "Severity": ["Low", "Medium", "High"]
+            },
+        )
+
+        severity_fig.update_layout(
+            height=420,
+            margin=dict(l=10, r=10, t=20, b=10),
+            xaxis_title=None,
+            yaxis_title="Number of Failures",
+            hovermode="x unified",
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
+                x=0.5,
+            ),
+        )
+
+        st.plotly_chart(
+            severity_fig,
+            use_container_width=True,
+        )
+
+        # Flag if High-severity share is growing over time
+        high_share = (
+            severity_monthly[severity_monthly["Severity"] == "High"]
+            .set_index("Month")["Failures"]
+        )
+
+        totals_by_month = (
+            severity_monthly.groupby("Month")["Failures"].sum()
+        )
+
+        if len(high_share) >= 2 and not totals_by_month.empty:
+
+            first_month = totals_by_month.index[0]
+            last_month = totals_by_month.index[-1]
+
+            first_ratio = (
+                high_share.get(first_month, 0) / totals_by_month[first_month]
+                if totals_by_month[first_month] else 0
+            )
+
+            last_ratio = (
+                high_share.get(last_month, 0) / totals_by_month[last_month]
+                if totals_by_month[last_month] else 0
+            )
+
+            if last_ratio > first_ratio + 0.1:
+                st.error(
+                    "⚠️ The share of High-severity failures is "
+                    "trending upward — quality may be degrading "
+                    "over time, not just volume."
+                )
+            elif last_ratio < first_ratio - 0.1:
+                st.success(
+                    "✅ The share of High-severity failures is "
+                    "trending downward relative to total volume."
+                )
+
+   
 
     # --------------------------------------------------
     # MONTHLY SUMMARY

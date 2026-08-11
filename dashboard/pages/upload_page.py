@@ -6,6 +6,8 @@ import streamlit as st
 import pandas as pd
 
 
+from src.core.schema import normalize_dataset, get_missing_canonical_columns
+
 def render_upload_page():
 
     st.title("📂 Upload Dataset")
@@ -61,6 +63,9 @@ def render_upload_page():
 
         df = pd.read_csv(uploaded_file)
 
+        # Normalize to the canonical InsightForge schema
+        df = normalize_dataset(df)
+
         # Store dataset
         st.session_state["dataset"] = df
 
@@ -68,6 +73,16 @@ def render_upload_page():
             f"✅ Dataset uploaded successfully — "
             f"{len(df):,} records detected."
         )
+
+        missing_columns = get_missing_canonical_columns(df)
+
+        if missing_columns:
+            st.warning(
+                "⚠ Some expected columns were not found in this dataset: "
+                f"**{', '.join(missing_columns)}**. "
+                "Pages that rely on these fields will show partial "
+                "or N/A results."
+            )
 
         # --------------------------------------------------
         # DATASET OVERVIEW
