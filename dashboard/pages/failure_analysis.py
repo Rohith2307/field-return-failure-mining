@@ -26,10 +26,13 @@ def render_failure_analysis():
     df = st.session_state["dataset"].copy()
 
     # ==================================================
-    # FILTERS
+    # FILTERS (top bar)
     # ==================================================
 
-    st.sidebar.markdown("## Analysis Filters")
+    st.markdown(
+        '<div class="section-label">FILTERS</div>',
+        unsafe_allow_html=True,
+    )
 
     failure_column = (
         "Failure" if "Failure" in df.columns
@@ -37,64 +40,74 @@ def render_failure_analysis():
         else None
     )
 
-    if "Severity" in df.columns:
+    filter_col1, filter_col2, filter_col3 = st.columns(3)
 
-        severity_options = [
-            "All",
-            "High",
-            "Medium",
-            "Low",
-        ]
+    with filter_col1:
 
-        selected_severity = st.sidebar.selectbox(
-            "Severity",
-            severity_options,
-        )
+        if "Severity" in df.columns:
 
-        if selected_severity != "All":
-            df = df[
-                df["Severity"] == selected_severity
+            severity_options = [
+                "All",
+                "High",
+                "Medium",
+                "Low",
             ]
 
-    if "Model" in df.columns:
+            selected_severity = st.selectbox(
+                "Severity",
+                severity_options,
+            )
 
-        model_options = sorted(
-            df["Model"]
-            .dropna()
-            .astype(str)
-            .unique()
-            .tolist()
-        )
+            if selected_severity != "All":
+                df = df[
+                    df["Severity"] == selected_severity
+                ]
 
-        selected_models = st.sidebar.multiselect(
-            "Product Model",
-            model_options,
-            default=model_options,
-        )
+    with filter_col2:
 
-        df = df[
-            df["Model"].astype(str).isin(selected_models)
-        ]
+        if "Model" in df.columns:
 
-    if failure_column:
+            model_options = sorted(
+                df["Model"]
+                .dropna()
+                .astype(str)
+                .unique()
+                .tolist()
+            )
 
-        failure_options = sorted(
-            df[failure_column]
-            .dropna()
-            .astype(str)
-            .unique()
-            .tolist()
-        )
+            selected_models = st.multiselect(
+                "Product Model",
+                model_options,
+                default=model_options,
+            )
 
-        selected_failures = st.sidebar.multiselect(
-            "Failure Mode",
-            failure_options,
-            default=failure_options,
-        )
+            df = df[
+                df["Model"].astype(str).isin(selected_models)
+            ]
 
-        df = df[
-            df[failure_column].astype(str).isin(selected_failures)
-        ]
+    with filter_col3:
+
+        if failure_column:
+
+            failure_options = sorted(
+                df[failure_column]
+                .dropna()
+                .astype(str)
+                .unique()
+                .tolist()
+            )
+
+            selected_failures = st.multiselect(
+                "Failure Mode",
+                failure_options,
+                default=failure_options,
+            )
+
+            df = df[
+                df[failure_column].astype(str).isin(selected_failures)
+            ]
+
+    st.markdown("<div class='spacer'></div>", unsafe_allow_html=True)
 
     if df.empty:
         st.warning("No records match the selected filters.")
