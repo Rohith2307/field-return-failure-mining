@@ -283,6 +283,7 @@ def get_system_health_status(
     total_returns: int,
     months: list,
     failures: list,
+    risk_threshold: float = 0.3,
 ) -> dict:
     """
     Derive System Health Overview panel values from the
@@ -311,7 +312,7 @@ def get_system_health_status(
         risk_class = "green"
         risk_level = "Low"
         reliability = "High"
-    elif critical_ratio < 0.3:
+    elif critical_ratio < risk_threshold:
         risk_class = "orange"
         risk_level = "Medium"
         reliability = "Medium"
@@ -1394,6 +1395,7 @@ def render_dashboard() -> None:
         total_returns,
         months,
         failures,
+        st.session_state.get("risk_threshold_pct", 30) / 100,
     )
 
     cost_impact = get_cost_impact(

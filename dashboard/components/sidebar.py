@@ -85,6 +85,24 @@ def render_sidebar() -> str:
 
     st.session_state["default_cost_per_unit"] = default_cost
 
+    if "risk_threshold_pct" not in st.session_state:
+        st.session_state["risk_threshold_pct"] = 30
+
+    risk_threshold_pct = st.sidebar.slider(
+        "Risk Sensitivity",
+        min_value=5,
+        max_value=75,
+        value=st.session_state["risk_threshold_pct"],
+        step=5,
+        format="%d%%",
+        help=(
+            "Share of High-severity records at which the "
+            "dashboard flags High risk. Lower = stricter."
+        ),
+    )
+
+    st.session_state["risk_threshold_pct"] = risk_threshold_pct
+
     if models:
 
         with st.sidebar.expander(
