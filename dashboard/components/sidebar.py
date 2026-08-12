@@ -128,16 +128,7 @@ def render_sidebar() -> str:
                     model_cost
                 )
 
-    if "light_mode" not in st.session_state:
-        st.session_state["light_mode"] = False
-    light_mode = st.sidebar.toggle(
-        "Light Mode",
-        value=st.session_state["light_mode"],
-        key="light_mode_toggle",
-    )
-    if light_mode != st.session_state["light_mode"]:
-        st.session_state["light_mode"] = light_mode
-        st.rerun()
+    
     # --------------------------------------------------
     # Footer
     # --------------------------------------------------
